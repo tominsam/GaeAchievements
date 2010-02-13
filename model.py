@@ -2,7 +2,7 @@ from google.appengine.ext import db
 
 from utils import slugify
 import logging
-from datetime import datetime, date
+from datetime import datetime
 import urllib
 
 class BaseModel(db.Model):
