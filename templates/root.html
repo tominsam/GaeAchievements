@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+
+<html>
+  <body>
+    <h2>Guilds</h2>
+    <ul>
+    {% for guild in guilds %}
+      <li><a href="{{ guild.url() }}">{{ guild.name }}</a> ({{ guild.continent.upper() }} / {{ guild.realm }})</li>
+    {% endfor %}
+    </ul>
+
+    <h2>Add guild</h2>
+    <form action="/" method="post">
+      <p>continent <input type="text" name="continent"></p>
+      <p>realm <input type="text" name="realm"></p>
+      <p>guild name <input type="text" name="guild"></p>
+      <p><input type="submit" value="Create"></p>
+    </form>
+
+  </body>
+</html>
+
+{% endblock %}

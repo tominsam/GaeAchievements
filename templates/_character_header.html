@@ -1,0 +1,8 @@
+<h1>{{ character.name }} of <a href="{{ character.guild.url() }}">{{ character.guild.name }}</a>
+    - level {{ character.level }} {{ character.raceName() }} {{ character.className() }}</h1>
+
+# if character.last_fetch
+  <p>Last fetched from <a href="{{ character.armory_url() }}">armory</a> <span class="timeago" title="{{ character.last_fetch.ctime() }}">{{ character.last_fetch.ctime() }}</span>.</p>
+# else
+  <p>Never fetched.</p>
+# endif

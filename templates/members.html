@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include "_guild_header.html" %}
+
+<table id="members" class="sortable sortable-onload-0 rowstyle-evenrow" cellspacing="0" cellpadding="0" border="0">
+  <thead>
+    <tr>
+      <th class="sortable">Name</th>
+      <th class="sortable">Race</th>
+      <th class="sortable">Class</th>
+      <th class="sortable favour-reverse">Level</th>
+      <th class="sortable">Rank</th>
+      <th class="sortable favour-reverse">Achievement points</th>
+      <th class="sortable">Last fetched</th> 
+    </tr>
+  </thead>
+# for character in guild.character_set
+    <tr>
+      <td><a href="{{ character.url() }}">{{ character.name }}</a></td>
+      <td>{{ character.raceName() }}</td>
+      <td>{{ character.className() }}</td>
+      <td>{{ character.level }}</td>
+      <td>{{ character.rank }}</td>
+      <td>{{ character.achPoints or "" }}</td>
+      {% if character.last_fetch %}<td class="timeago" title="{{ character.last_fetch.ctime() }}Z">{{ character.last_fetch.ctime() }}</td>{% else %}<td>Never</td>{% endif %}
+    </tr>
+# endfor
+</table>
+
+{% endblock %}

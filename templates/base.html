@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{% block title %}Guild achievements{% endblock %}</title>
+  <link href="/static/style.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.2.6/jquery.min.js" type="text/javascript"></script>
+  <script src="/static/tablesort.min.js" type="text/javascript"></script>
+  <script src="/static/jquery.timeago.js" type="text/javascript"></script>
+
+  <%= yield :rss_autodiscovery %>
+
+  <!-- http://www.wowhead.com/?forums&topic=3464 -->
+  <script type="text/javascript" src="http://www.wowhead.com/widgets/power.js"></script>
+  
+  <script type="text/javascript">
+    $(function() {
+      $('.timeago').timeago();
+    });
+  </script>
+</head>
+<body>
+
+<div class="goodbox">
+{% block content %}{% endblock %}
+</div>
+
+<br><br><br>
+<p style="font-size: 90%">rachievments &mdash; another fine <a href="http://movieos.org/">Tom Insam</a> product.</p>
+
+</body>
+</html>
+
