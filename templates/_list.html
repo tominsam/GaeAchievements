@@ -6,16 +6,23 @@
   
 # else
 
-#   for date, list in achievement_data|groupby('date')
+{% if page and total_pages %}
+<div class="pagination">{% if page > 1 %}<a href="?page={{ page - 1 }}">&laquo; previous page</a>{% endif %} page {{ page }} of {{ total_pages }} {% if page < total_pages %}<a href="?page={{ page + 1 }}">next page &raquo;</a>{% endif %}</div>
+{% endif %}
 
-      <h2>{{ date.strftime("%A %d %B %Y") }}</h2>
-
-#     for data in list
-#       set achievement = data.achievement
-#       set character = data.character
-#       include "_achievement.html"
-#     endfor
-
+#   set old_date = None
+#   for data in achievement_data
+#     if old_date != data.date
+        <h2>{{ data.date.strftime("%A %d %B %Y") }}</h2>
+#       set old_date = data.date
+#     endif
+#     set achievement = data.achievement
+#     set character = data.character
+#     include "_achievement.html"
 #   endfor
+
+{% if page and total_pages %}
+<div class="pagination">{% if page > 1 %}<a href="?page={{ page - 1 }}">&laquo; previous page</a>{% endif %} page {{ page }} of {{ total_pages }} {% if page < total_pages %}<a href="?page={{ page + 1 }}">next page &raquo;</a>{% endif %}</div>
+{% endif %}
 
 # endif

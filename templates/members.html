@@ -23,7 +23,7 @@
       <td>{{ character.level }}</td>
       <td>{{ character.rank }}</td>
       <td>{{ character.achPoints or "" }}</td>
-      {% if character.last_fetch %}<td class="timeago" title="{{ character.last_fetch.ctime() }}Z">{{ character.last_fetch.ctime() }}</td>{% else %}<td>Never</td>{% endif %}
+      {% if character.timeago() %}<td class="timeago" title="{{ character.timeago() }}">{{ character.timeago() }}</td>{% else %}<td>Never</td>{% endif %}
     </tr>
 # endfor
 </table>

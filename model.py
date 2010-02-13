@@ -18,6 +18,10 @@ class BaseModel(db.Model):
         # NOTE - I'm assuming that slugify(slugify(x)) == slugify(x) here, because I pass urltokens in for these sometimes
         return cls.get_by_key_name( cls.key_name(*args) )
 
+    def timeago(self):
+        if not self.last_fetch: return None
+        return self.last_fetch.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
 
 class Guild(BaseModel):
     owner = db.UserProperty()
@@ -51,7 +55,6 @@ class Guild(BaseModel):
         g = Guild( key_name = key_name, continent = continent, realm = realm, name = name )
         g.urltoken = slugify(g.name)
         g.realm_urltoken = slugify(g.realm)
-        g.put()
         return g
 
     def url(self):
@@ -66,7 +69,7 @@ class Guild(BaseModel):
     
     def oldest_fetch(self):
         if not self.character_set: return None
-        return self.character_set.order("last_fetch")[0].last_fetch
+        return self.character_set.order("last_fetch")[0]
     
     def character_count(self):
         return self.character_set.count()
@@ -112,7 +115,6 @@ class Character(BaseModel):
         logging.info("create new character for key %s"%key_name)
         c.urltoken = slugify(name)
         c.realm_urltoken = slugify(realm)
-        c.put()
         return c
 
     def raceName(self):
@@ -165,11 +167,11 @@ class Achievement(BaseModel):
     @classmethod 
     def find_or_create(cls, armory_id, name, description, icon):
         key_name = cls.key_name( armory_id )
-        
+
         instance = cls.get_by_key_name( key_name )
         if not instance:
             instance = Achievement( key_name = key_name )
-            
+
         instance.armory_id = long(armory_id)
         instance.name = name
         instance.description = description
@@ -178,6 +180,9 @@ class Achievement(BaseModel):
 
         return instance
     
-    def url(self):
-        return "" # TODO
+    def url(self, guild):
+        return guild.url() + "achievement/%s/"%( self.armory_id )
     
+    def wowhead_url(self):
+        return "http://www.wowhead.com/?achievement=%s"%( self.armory_id )
+        

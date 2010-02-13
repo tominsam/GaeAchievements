@@ -14,6 +14,29 @@ jinja2_env = Environment(
     autoescape=True
 )
 
+def build_achievement_list( characters, limit = 20, offset = 0 ):
+    achievement_data = []
+    for character in characters:
+        for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
+            achievement_data.append({
+                "date":date.date(),
+                "character":character,
+                "achievement_id":achievement_id, # look up objects _after_ list truncate
+            })
+    
+    # limit to most recent entries
+    def by_date(a, b):
+        return cmp(b['date'], a['date'])
+    achievement_data.sort(by_date)
+    achievement_data = achievement_data[offset:offset+limit]
+    
+    for a in achievement_data:
+        a["achievement"] = Achievement.lookup( a['achievement_id'] )
+        
+    logging.info(repr( achievement_data ))
+    
+    return achievement_data
+    
 class BaseHandler(webapp.RequestHandler):
     def render( self, template_name, vars ):
         template = jinja2_env.get_template(template_name)
@@ -36,12 +59,17 @@ class RootHandler(BaseHandler):
                 # guild is gone - this makes the delete step here faster.
                 g.delete()
             return
+        
+        if not users.get_current_user():
+            return self.redirect("/")
 
         continent = self.request.get("continent")
         realm = self.request.get("realm")
         guildname = self.request.get("guild")
 
         guild = Guild.find_or_create( continent, realm, guildname )
+        guild.owner = users.get_current_user()
+        guild.put()
         if not guild:
             return self.error(404)
         taskqueue.add(url='/fetcher/guild', params={'key': guild.key()})
@@ -55,14 +83,20 @@ class GuildMainHandler(BaseHandler):
         if not guild:
             return self.error(404)
         
-        achievement_data = []
-        for character in guild.character_set:
-            for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
-                achievement_data.append({
-                    "date":date.date(),
-                    "achievement":Achievement.lookup( achievement_id ),
-                    "character":character,
-                })
+        limit = 20
+        ids = []
+        for c in guild.character_set: ids += c.achievement_ids
+        total_pages = int(len(ids) / limit) + 1
+        try:
+            page = int(self.request.get("page"))
+        except ValueError:
+            page = 1
+        if page < 1: page = 1
+        offset = ( page - 1 ) * limit
+        
+        achievement_data = build_achievement_list( guild.character_set, limit = limit, offset = offset )
+
+
         self.render( "guild.html", locals() )
 
 class GuildMembersHandler(BaseHandler):
@@ -80,6 +114,17 @@ class GuildAchievementHandler(BaseHandler):
         achievement = Achievement.lookup( achievement_id )
         if not achievement and guild:
             return self.error(404)
+        
+        achievement_data = []
+        for character in guild.character_set.filter( "achievement_ids =", achievement.armory_id ):
+            for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
+                if achievement_id == achievement.armory_id:
+                    achievement_data.append({
+                        "date":date.date(),
+                        "character":character,
+                        "achievement":achievement,
+                    })
+    
         self.render( "guild_achievement.html", locals() )
 
 class CharacterHandler(BaseHandler):
@@ -88,20 +133,17 @@ class CharacterHandler(BaseHandler):
         character = Character.lookup( continent, realm, urltoken )
         if not character:
             return self.error(404)
-
-        achievement_data = []
-        for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
-            achievement_data.append({
-                "date":date.date(),
-                "achievement":Achievement.lookup( achievement_id ),
-                "character":character,
-            })
-            
-        def date_order(a,b):
-            return cmp( b['date'], a['date'] )
-        achievement_data.sort(date_order)
         
-        logging.info("found %s achievments"%( len(achievement_data)))
+        limit = 20
+        total_pages = int(len(character.achievement_ids) / limit) + 1
+        try:
+            page = int(self.request.get("page"))
+        except ValueError:
+            page = 1
+        if page < 1: page = 1
+        offset = ( page - 1 ) * limit
+
+        achievement_data = build_achievement_list( [ character ], limit = limit, offset = offset )
 
         self.render( "character.html", locals() )
 

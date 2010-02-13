@@ -3,7 +3,7 @@
   <div style="margin-left: 60px">
     <h3><a href="{{ character.url() }}">{{ character.name }}</a>
     gained the achievement
-    '<a href="{{ achievement.url() }}">{{ achievement.name }}</a>'</h3>
+    '<a href="{{ achievement.url(character.guild) }}">{{ achievement.name }}</a>'</h3>
     <p>{{ achievement.description }}</p>
   </div>
 </div>

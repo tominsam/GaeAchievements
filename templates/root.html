@@ -4,7 +4,7 @@
 <script type="text/javascript">$(function(){
 
 $(".delete").click(function() {
-  if (!(confirm("Sure?")) return false;
+  if (!confirm("Sure?")) return false;
   $.post("/", { "delete":$(this).attr("key") }, function() {
     window.location.reload();
   });
@@ -24,6 +24,7 @@ $(".delete").click(function() {
 {% endfor %}
 </ul>
 
+{% if user %}
 <h2>Add guild</h2>
 <form action="/" method="post">
   <p>continent <input type="text" name="continent"></p>
@@ -31,5 +32,6 @@ $(".delete").click(function() {
   <p>guild name <input type="text" name="guild"></p>
   <p><input type="submit" value="Create"></p>
 </form>
+{% endif %}
 
 {% endblock %}

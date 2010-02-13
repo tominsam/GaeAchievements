@@ -4,7 +4,6 @@ from google.appengine.api import urlfetch
 import urllib
 import xmltramp
 import sys
-from time import gmtime, strftime
 import logging
 import iso8601
 
@@ -51,12 +50,12 @@ def guild( guild, force = False ):
         xml = fetch( guild.armory_url() )
     except NotFoundError:
         guild.fetch_error = "Can't find armoury URL."
-        guild.last_fetch = datetime.now()
+        guild.last_fetch = datetime.utcnow()
         guild.put()
         return
     except FetchError:
         guild.fetch_error = "Error fetching URL from armory."
-        guild.last_fetch = datetime.now()
+        guild.last_fetch = datetime.utcnow()
         guild.put()
         return
 
@@ -94,7 +93,7 @@ def guild( guild, force = False ):
 
         found.append( character.key() )
 
-        if not character.last_fetch or character.last_fetch < datetime.now() - timedelta( hours = 2 ):
+        if not character.last_fetch or character.last_fetch < datetime.utcnow() - timedelta( hours = 2 ):
             needs_refresh.append( character.key() )
     
     for character in guild.character_set:
@@ -103,7 +102,7 @@ def guild( guild, force = False ):
             character.guild = None
             found.append( character.key() )
 
-    guild.last_fetch = datetime.now()
+    guild.last_fetch = datetime.utcnow()
 
     # save all characters at once.
     logging.info("saving %s characters"%len( dirty_characters ))
@@ -148,7 +147,7 @@ def character( guild, character, force = False ):
         # me might have missed some. We need a full backfill.
         return backfill( guild, character, char_xml )
     
-    character.last_fetch = datetime.now()
+    character.last_fetch = datetime.utcnow()
     character.put()
 
 def backfill( guild, character, char_xml = None ):
@@ -176,7 +175,7 @@ def backfill( guild, character, char_xml = None ):
                 character.achievement_ids.append( achievement.armory_id )
                 character.achievement_dates.append( iso8601.parse_date(ach("dateCompleted")) )
     
-    character.last_fetch = datetime.now()
+    character.last_fetch = datetime.utcnow()
     character.put()
 
 

@@ -86,3 +86,8 @@ table td, table th {
     font-size: 90%;
     margin: 20px;
 }
+
+.pagination {
+    margin: 30px;
+    font-size: 90%;
+}
