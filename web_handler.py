@@ -31,10 +31,8 @@ def build_achievement_list( characters, limit = 20, offset = 0 ):
     achievement_data = achievement_data[offset:offset+limit]
     
     for a in achievement_data:
-        a["achievement"] = Achievement.lookup( a['achievement_id'] )
+        a["achievement"] = Achievement.lookup_cached( a['achievement_id'] )
         
-    logging.info(repr( achievement_data ))
-    
     return achievement_data
     
 class BaseHandler(webapp.RequestHandler):
@@ -79,7 +77,7 @@ class RootHandler(BaseHandler):
 class GuildMainHandler(BaseHandler):
 
     def get(self, continent, realm, urltoken):
-        guild = Guild.lookup( continent, realm, urltoken )
+        guild = Guild.lookup_cached( continent, realm, urltoken )
         if not guild:
             return self.error(404)
         
@@ -102,7 +100,7 @@ class GuildMainHandler(BaseHandler):
 class GuildMembersHandler(BaseHandler):
 
     def get(self, continent, realm, urltoken):
-        guild = Guild.lookup( continent, realm, urltoken )
+        guild = Guild.lookup_cached( continent, realm, urltoken )
         if not guild:
             return self.error(404)
         self.render( "members.html", locals() )
@@ -110,8 +108,8 @@ class GuildMembersHandler(BaseHandler):
 class GuildAchievementHandler(BaseHandler):
 
     def get(self, continent, realm, urltoken, achievement_id):
-        guild = Guild.lookup( continent, realm, urltoken )
-        achievement = Achievement.lookup( achievement_id )
+        guild = Guild.lookup_cached( continent, realm, urltoken )
+        achievement = Achievement.lookup_cached( achievement_id )
         if not achievement and guild:
             return self.error(404)
         
@@ -124,6 +122,10 @@ class GuildAchievementHandler(BaseHandler):
                         "character":character,
                         "achievement":achievement,
                     })
+
+        def by_date(a, b):
+            return cmp(b['date'], a['date'])
+        achievement_data.sort(by_date)
     
         self.render( "guild_achievement.html", locals() )
 

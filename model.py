@@ -1,4 +1,5 @@
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
 from utils import slugify
 import logging
@@ -17,6 +18,18 @@ class BaseModel(db.Model):
     def lookup(cls, *args):
         # NOTE - I'm assuming that slugify(slugify(x)) == slugify(x) here, because I pass urltokens in for these sometimes
         return cls.get_by_key_name( cls.key_name(*args) )
+    
+    @classmethod
+    def lookup_cached( cls, *args ):
+        key_name = cls.key_name(*args)
+        cached = memcache.get( key_name )
+        if cached:
+            logging.info("using cached %s [%s]"%(cls, repr(args)))
+            return cached
+        logging.info("not cached %s [%s]"%(cls, repr(args)))
+        instance = cls.lookup( *args )
+        memcache.add( key_name, instance )
+        return instance
 
     def timeago(self):
         if not self.last_fetch: return None
@@ -45,13 +58,10 @@ class Guild(BaseModel):
             return None
         
         key_name = cls.key_name( continent, realm, name )
-        logging.info( "key name is %s"%key_name )
         
         g = cls.get_by_key_name( key_name )
         if g:
-            logging.info("found existing guild for key name %s"%key_name)
             return g
-        logging.info("creating new guild with key name %s"%key_name)
         g = Guild( key_name = key_name, continent = continent, realm = realm, name = name )
         g.urltoken = slugify(g.name)
         g.realm_urltoken = slugify(g.realm)
@@ -109,10 +119,8 @@ class Character(BaseModel):
         key_name = cls.key_name( continent, realm, name )
         c = cls.get_by_key_name( key_name )
         if c:
-            logging.info("find existing character for key %s"%key_name)
             return c
         c = Character( key_name = key_name, continent = continent, realm = realm, name = name )
-        logging.info("create new character for key %s"%key_name)
         c.urltoken = slugify(name)
         c.realm_urltoken = slugify(realm)
         return c
@@ -177,7 +185,7 @@ class Achievement(BaseModel):
         instance.description = description
         instance.image = "http://www.wowarmory.com/wow-icons/_images/51x51/%s.jpg"%( icon )
         instance.put() # TODO - dirty flag
-
+        
         return instance
     
     def url(self, guild):
