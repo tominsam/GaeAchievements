@@ -18,6 +18,9 @@ from model import *
 class FetchError(Exception):
     pass
 
+class NotFoundError(FetchError):
+    pass
+
 def fetch( url ):
     # Need to specify firefox as user agent as this makes the server return an XML file.
     
@@ -30,8 +33,13 @@ def fetch( url ):
         logging.error("Error fetching %s: %s"%( url, e ))
         raise FetchError()
     
+    if str(result.status_code)[0] == '4':
+        raise NotFoundError()
+
     if result.status_code == 200:
         return xmltramp.parse( result.content )
+    
+    logging.info("fetch code %s"%( result.status_code ))
     
     raise FetchError()
 
@@ -40,9 +48,15 @@ def guild( guild, force = False ):
     
     try:
         xml = fetch( guild.armory_url() )
+    except NotFoundError:
+        guild.fetch_error = "Can't find armoury URL."
+        guild.last_fetch = datetime.now()
+        guild.put()
+        return
     except FetchError:
         raise
 
+    guild.fetch_error = None
     found = []
     dirty_characters = []
     needs_refresh = []

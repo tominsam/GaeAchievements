@@ -1,7 +1,9 @@
 <h1>{{ guild.name }} on {{ guild.realm }}</h1>
 
 <p>
-# if guild.last_fetch
+# if guild.fetch_error
+  Error fetching this guild: {{ guild.fetch_error }}
+# elif guild.last_fetch
   Last fetched from <a href="{{ guild.armory_url }}">armory</a> <span class="timeago" title="{{ guild.last_fetch.ctime() }}Z">{{ guild.last_fetch.ctime() }}</span>.
 #   if guild.character_set and guild.character_set.order("last_fetch")[0].last_fetch
     Oldest toon fetched <span class="timeago" title="{{ guild.character_set.order("last_fetch")[0].last_fetch.ctime() }}Z">{{ guild.character_set.order("last_fetch")[0].last_fetch.ctime() }}</span>.

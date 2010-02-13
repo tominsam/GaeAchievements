@@ -29,6 +29,7 @@ class Guild(BaseModel):
     urltoken = db.StringProperty()
 
     last_fetch = db.DateTimeProperty()
+    fetch_error = db.StringProperty()
     
     @classmethod
     def find_or_create(cls, continent, realm, name):
