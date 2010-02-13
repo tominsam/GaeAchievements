@@ -64,6 +64,16 @@ class Guild(BaseModel):
         else:
             return "www.wowarmory.com"
     
+    def oldest_fetch(self):
+        if not self.character_set: return None
+        return self.character_set.order("last_fetch")[0].last_fetch
+    
+    def character_count(self):
+        return self.character_set.count()
+
+    def fetch_count(self):
+        return self.character_set.filter("last_fetch !=", None ).count()
+
     def armory_url(self):
         return "http://%s/guild-info.xml?r=%s&n=%s&p=1"%( self.server(), urllib.quote(self.realm.encode('utf-8'),''), urllib.quote(self.name.encode('utf-8'),'') )
 

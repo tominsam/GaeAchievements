@@ -1,24 +1,35 @@
 {% extends "base.html" %}
 {% block content %}
 
-<html>
-  <body>
-    <h2>Guilds</h2>
-    <ul>
-    {% for guild in guilds %}
-      <li><a href="{{ guild.url() }}">{{ guild.name }}</a> ({{ guild.continent.upper() }} / {{ guild.realm }})</li>
-    {% endfor %}
-    </ul>
+<script type="text/javascript">$(function(){
 
-    <h2>Add guild</h2>
-    <form action="/" method="post">
-      <p>continent <input type="text" name="continent"></p>
-      <p>realm <input type="text" name="realm"></p>
-      <p>guild name <input type="text" name="guild"></p>
-      <p><input type="submit" value="Create"></p>
-    </form>
+$(".delete").click(function() {
+  if (!(confirm("Sure?")) return false;
+  $.post("/", { "delete":$(this).attr("key") }, function() {
+    window.location.reload();
+  });
+  return false;
+});
 
-  </body>
-</html>
+});</script>
+
+<h2>Guilds</h2>
+<ul>
+{% for guild in guilds %}
+  <li><a href="{{ guild.url() }}">{{ guild.name }}</a> ({{ guild.continent.upper() }} / {{ guild.realm }})
+    {% if user and (guild.owner == user or users.is_current_user_admin()) %}
+      <a href="#" key="{{ guild.key() }}" class="delete">delete</a>
+    {% endif %}
+  </li>
+{% endfor %}
+</ul>
+
+<h2>Add guild</h2>
+<form action="/" method="post">
+  <p>continent <input type="text" name="continent"></p>
+  <p>realm <input type="text" name="realm"></p>
+  <p>guild name <input type="text" name="guild"></p>
+  <p><input type="submit" value="Create"></p>
+</form>
 
 {% endblock %}

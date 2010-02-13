@@ -3,6 +3,12 @@
 
 {% include "_guild_header.html" %}
 
-{% include "_list.html" %}
+# if guild.last_fetch and guild.character_set.count()
+#   include "_list.html"
+# elif not guild.last_fetch
+  <p>Nothing fetched for this guild yet. I've queued something. Please wait a few minutes.</p>
+# else
+  <p>This guild doesn't seem to have any members.</p>
+# endif
 
 {% endblock %}

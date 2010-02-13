@@ -1,10 +1,9 @@
 import os, sys
 import logging
 
-
 from google.appengine.ext import webapp
 from google.appengine.api.labs import taskqueue
-import itertools
+from google.appengine.api import users
 
 from model import *
 
@@ -18,6 +17,8 @@ jinja2_env = Environment(
 class BaseHandler(webapp.RequestHandler):
     def render( self, template_name, vars ):
         template = jinja2_env.get_template(template_name)
+        vars['users'] = users
+        vars['user'] = users.get_current_user()
         self.response.out.write(template.render(vars))
 
 class RootHandler(BaseHandler):
@@ -27,6 +28,15 @@ class RootHandler(BaseHandler):
         self.render( "root.html", locals() )
 
     def post(self):
+        delete = self.request.get("delete")
+        if delete:
+            g = Guild.get( delete )
+            if users.is_current_user_admin() or g.owner == users.get_current_user():
+                # the character fetcher deletes the characters once it notices that their
+                # guild is gone - this makes the delete step here faster.
+                g.delete()
+            return
+
         continent = self.request.get("continent")
         realm = self.request.get("realm")
         guildname = self.request.get("guild")

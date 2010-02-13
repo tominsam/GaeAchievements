@@ -9,12 +9,20 @@ import fetcher
 
 class GuildFetcher(webapp.RequestHandler):
     def post(self):
-        key = self.request.get('key')
-        guild = Guild.get( key )
-        fetcher.guild( guild )
+        try:
+            key = self.request.get('key')
+            guild = Guild.get( key )
+            fetcher.guild( guild )
+        except Exception, e:
+            self.response.out.write(e)
+            raise
 
 class CharacterFetcher(webapp.RequestHandler):
     def post(self):
-        key = self.request.get('key')
-        character = Character.get( key )
-        fetcher.character( character.guild, character )
+        try:
+            key = self.request.get('key')
+            character = Character.get( key )
+            fetcher.character( character.guild, character )
+        except Exception, e:
+            self.response.out.write(e)
+            raise

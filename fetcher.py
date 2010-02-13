@@ -30,7 +30,7 @@ def fetch( url ):
             headers = { "User-Agent":'Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4' }
         )
     except urlfetch.DownloadError, e:
-        logging.error("Error fetching %s: %s"%( url, e ))
+        logging.error("DownloadError fetching %s: %s"%( url, e ))
         raise FetchError()
     
     if str(result.status_code)[0] == '4':
@@ -39,7 +39,8 @@ def fetch( url ):
     if result.status_code == 200:
         return xmltramp.parse( result.content )
     
-    logging.info("fetch code %s"%( result.status_code ))
+    logging.info("fetch code %s fetching %s"%( result.status_code, url ))
+    logging.info( result.content )
     
     raise FetchError()
 
@@ -54,7 +55,10 @@ def guild( guild, force = False ):
         guild.put()
         return
     except FetchError:
-        raise
+        guild.fetch_error = "Error fetching URL from armory."
+        guild.last_fetch = datetime.now()
+        guild.put()
+        return
 
     guild.fetch_error = None
     found = []
@@ -112,6 +116,10 @@ def guild( guild, force = False ):
     
 
 def character( guild, character, force = False ):
+    if not guild and not character.guild:
+        # erase characters without a guild
+        character.delete()
+        return
 
     try:
         char_xml = fetch( character.armory_url() )

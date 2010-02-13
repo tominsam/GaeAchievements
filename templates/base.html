@@ -21,7 +21,15 @@
 <body>
 
 <div class="goodbox">
-{% block content %}{% endblock %}
+  <div class="header">
+  {% if user %}
+    Logged in as {{ user.nickname() }}. <a href="{{ users.create_logout_url("/") }}">Log out</a>
+  {% else %}
+    <a href="{{ users.create_login_url("/") }}">Log in</a>
+  {% endif %}
+  </div>
+
+  {% block content %}{% endblock %}
 </div>
 
 <br><br><br>

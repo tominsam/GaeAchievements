@@ -80,3 +80,9 @@ table td, table th {
 }
 
 .goodbox { overflow: hidden; width: 100%; }
+
+.header {
+    float: right;
+    font-size: 90%;
+    margin: 20px;
+}
