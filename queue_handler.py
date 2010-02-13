@@ -17,3 +17,4 @@ class CharacterFetcher(webapp.RequestHandler):
     def post(self):
         key = self.request.get('key')
         character = Character.get( key )
+        fetcher.character( character.guild, character )
