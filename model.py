@@ -28,13 +28,38 @@ class BaseModel(db.Model):
             return cached
         logging.info("not cached %s [%s]"%(cls, repr(args)))
         instance = cls.lookup( *args )
-        memcache.add( key_name, instance )
+        memcache.set( key_name, instance )
         return instance
+    
+    @classmethod
+    def lookup_many_cached(cls, ids):
+        keys = []
+        for args in ids:
+            keys.append( cls.key_name( *args ) )
+        logging.info(repr(keys))
+        found = memcache.get_multi( keys )
+        logging.info(repr(found))
+        added = {}
+        for key in keys:
+            if key not in found:
+                logging.info("%s not cached - fetching"%( key ))
+                found[key] = cls.get_by_key_name(key)
+                if found[key]:
+                    added[key] = found[key]
+                else:
+                    logging.info("Failed to fetch %s"%key)
+        
+        if added.keys():
+            memcache.add_multi( added )
+        return found
 
     def timeago(self):
         if not self.last_fetch: return None
         return self.last_fetch.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
+        
+    def put(self):
+        memcache.delete( self.key().name() )
+        return super( BaseModel, self ).put()
 
 class Guild(BaseModel):
     owner = db.UserProperty()
@@ -70,7 +95,6 @@ class Guild(BaseModel):
     def url(self):
         return "/%s/%s/guild/%s/"%( self.continent, self.realm_urltoken, self.urltoken )
         
-        
     def server(self):
         if self.continent == 'eu':
             return "eu.wowarmory.com"
@@ -78,15 +102,14 @@ class Guild(BaseModel):
             return "www.wowarmory.com"
     
     def oldest_fetch(self):
-        if not self.character_set: return None
-        return self.character_set.order("last_fetch")[0]
+        try:
+            return self._oldest_fetch
+        except AttributeError:
+            if not self.character_set:
+                self._oldest_fetch = None
+            self._oldest_fetch = self.character_set.order("last_fetch").fetch(1)[0]
+        return self._oldest_fetch
     
-    def character_count(self):
-        return self.character_set.count()
-
-    def fetch_count(self):
-        return self.character_set.filter("last_fetch !=", None ).count()
-
     def armory_url(self):
         return "http://%s/guild-info.xml?r=%s&n=%s&p=1"%( self.server(), urllib.quote(self.realm.encode('utf-8'),''), urllib.quote(self.name.encode('utf-8'),'') )
 

@@ -5,9 +5,8 @@
   <span style="color: red">Error fetching this guild: {{ guild.fetch_error }}</span>
 # elif guild.last_fetch
   Last fetched from <a href="{{ guild.armory_url }}">armory</a> <span class="timeago" title="{{ guild.timeago() }}">{{ guild.timeago() }}</span>.
-  Fetched {{ guild.fetch_count() }} of <a href="{{ guild.url() }}members/">{{ guild.character_count() }} characters</a>.
 #   if guild.oldest_fetch()
-    Oldest toon fetched <span class="timeago" title="{{ guild.oldest_fetch().timeago() }}">{{ guild.oldest_fetch().timeago() }}</span>.
+    Oldest toon fetched <span class="timeago" title="{{ guild.oldest_fetch().timeago() }}">{{ guild.oldest_fetch().timeago() or "never" }}</span>.
 #   endif
 
 # else

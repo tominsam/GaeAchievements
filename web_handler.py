@@ -30,8 +30,13 @@ def build_achievement_list( characters, limit = 20, offset = 0 ):
     achievement_data.sort(by_date)
     achievement_data = achievement_data[offset:offset+limit]
     
+    lookup_ids = []
     for a in achievement_data:
-        a["achievement"] = Achievement.lookup_cached( a['achievement_id'] )
+        lookup_ids.append( [ a['achievement_id'] ] )
+    looked_up = Achievement.lookup_many_cached( lookup_ids )
+
+    for a in achievement_data:
+        a["achievement"] = looked_up[ Achievement.key_name(a['achievement_id']) ]
         
     return achievement_data
     
@@ -83,7 +88,9 @@ class GuildMainHandler(BaseHandler):
         
         limit = 20
         ids = []
-        for c in guild.character_set: ids += c.achievement_ids
+        all_characters = guild.character_set.fetch(1000)
+
+        for c in all_characters: ids += c.achievement_ids
         total_pages = int(len(ids) / limit) + 1
         try:
             page = int(self.request.get("page"))
@@ -92,8 +99,7 @@ class GuildMainHandler(BaseHandler):
         if page < 1: page = 1
         offset = ( page - 1 ) * limit
         
-        achievement_data = build_achievement_list( guild.character_set, limit = limit, offset = offset )
-
+        achievement_data = build_achievement_list( all_characters, limit = limit, offset = offset )
 
         self.render( "guild.html", locals() )
 
