@@ -70,7 +70,7 @@ class RootHandler(BaseHandler):
         guild.put()
         if not guild:
             return self.error(404)
-        taskqueue.add(url='/fetcher/guild', params={'key': guild.key()})
+        taskqueue.add(url='/fetcher/guild/', params={'key': guild.key()})
         
         self.redirect( guild.url() )
 

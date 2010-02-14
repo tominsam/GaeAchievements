@@ -12,9 +12,9 @@ def main():
         (r'/(\w{2})/(.*?)/guild/(.*?)/members/', GuildMembersHandler),
         (r'/(\w{2})/(.*?)/guild/(.*?)/', GuildMainHandler),
         (r'/(\w{2})/(.*?)/character/(.*?)/', CharacterHandler),
-        ('/fetcher/guild', GuildFetcher),
-        ('/fetcher/character', CharacterFetcher),
-        ('/cron/hourly', HourlyCron),
+        ('/fetcher/guild/', GuildFetcher),
+        ('/fetcher/character/', CharacterFetcher),
+        ('/cron/hourly/', HourlyCron),
         
     ], debug=True)
     util.run_wsgi_app(application)

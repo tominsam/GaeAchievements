@@ -1,4 +1,4 @@
 cron:
 - description: hourly cron
-  url: /cron/hourly
+  url: /cron/hourly/
   schedule: every 1 hours

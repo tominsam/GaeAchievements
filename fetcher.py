@@ -111,7 +111,7 @@ def guild( guild, force = False ):
 
     logging.info("adding %s characters to refresh queue"%len( needs_refresh ))
     for key in needs_refresh:
-        taskqueue.add(url='/fetcher/character', params={'key': key})
+        taskqueue.add(url='/fetcher/character/', params={'key': key})
     
 
 def character( guild, character, force = False ):
