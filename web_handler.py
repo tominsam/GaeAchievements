@@ -152,6 +152,7 @@ class CharacterHandler(BaseHandler):
         offset = ( page - 1 ) * limit
 
         achievement_data = build_achievement_list( [ character ], limit = limit, offset = offset )
+        guild = character.guild
 
         self.render( "character.html", locals() )
 
