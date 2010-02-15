@@ -123,7 +123,7 @@ def character( guild, character, force = False ):
     try:
         char_xml = fetch( character.armory_url() )
     except FetchError:
-        raise
+        return # normally this is an armory failure. I'm not going to put clever handling in here.
     
     char = char_xml['characterInfo']['character']
     character.achPoints = long(char('points'))
@@ -155,14 +155,14 @@ def backfill( guild, character, char_xml = None ):
         try:
             char_xml = fetch( character.armory_url() )
         except FetchError:
-            raise
+            return # normally an armory error
 
     for category in char_xml['achievements']['rootCategories']:
         logging.info("   fetching category %s: %s"%( category('id'), category('name') ) )
         try:
             category_xml = fetch(character.armory_url() + u"&c=%s"%category("id") )
         except FetchError:
-            raise
+            return # failed.
         
         for ach in category_xml['category']:
             # add completed achievements only:
