@@ -45,7 +45,6 @@ def fetch( url ):
 
 
 def guild( guild, force = False ):
-    
     try:
         xml = fetch( guild.armory_url() )
     except NotFoundError:
@@ -93,9 +92,12 @@ def guild( guild, force = False ):
 
         found.append( character.key() )
 
-        if not character.last_fetch or character.last_fetch < datetime.utcnow() - timedelta( hours = 2 ):
+        # TODO - only do this for new characters? I worry about the race condition
+        # where a guild is refreshed because of a cron run, because the characters
+        # will have been queued for refresh at the same time
+        if not character.last_fetch or character.last_fetch < datetime.utcnow() - timedelta( hours = 5 ):
             needs_refresh.append( character.key() )
-    
+
     for character in guild.character_set:
         if not character.key() in found:
             logging.info("removing character %s from guild"%( character.name ))

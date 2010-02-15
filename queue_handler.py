@@ -12,7 +12,8 @@ class GuildFetcher(webapp.RequestHandler):
         try:
             key = self.request.get('key')
             guild = Guild.get( key )
-            fetcher.guild( guild )
+            if guild:
+                fetcher.guild( guild )
         except Exception, e:
             self.response.out.write(e)
             raise
@@ -22,7 +23,8 @@ class CharacterFetcher(webapp.RequestHandler):
         try:
             key = self.request.get('key')
             character = Character.get( key )
-            fetcher.character( character.guild, character )
+            if character:
+                fetcher.character( character.guild, character )
         except Exception, e:
             self.response.out.write(e)
             raise
