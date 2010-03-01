@@ -127,7 +127,11 @@ def character( guild, character, force = False ):
     except FetchError:
         return # normally this is an armory failure. I'm not going to put clever handling in here.
     
-    char = char_xml['characterInfo']['character']
+    try:
+        char = char_xml['characterInfo']['character']
+    except KeyError:
+        return # normally armoury error
+
     character.achPoints = long(char('points'))
     
     added_count = 0
