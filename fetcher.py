@@ -7,6 +7,10 @@ import sys
 import logging
 import iso8601
 
+from cStringIO   import StringIO
+from xml.etree   import cElementTree as etree
+
+
 from google.appengine.ext import db
 from google.appengine.api import datastore_errors
 from google.appengine.api.labs import taskqueue
@@ -21,6 +25,9 @@ class NotFoundError(FetchError):
     pass
 
 def fetch( url ):
+    return xmltramp.parse( fetch_raw( url ) )
+
+def fetch_raw( url ):
     # Need to specify firefox as user agent as this makes the server return an XML file.
     
     try:
@@ -36,9 +43,9 @@ def fetch( url ):
         raise NotFoundError()
 
     if result.status_code == 200:
-        return xmltramp.parse( result.content )
+        return result.content
     
-    logging.info("fetch code %s fetching %s"%( result.status_code, url ))
+    logging.error("fetch code %s fetching %s"%( result.status_code, url ))
     logging.info( result.content )
     
     raise FetchError()
@@ -69,12 +76,12 @@ def guild( guild, force = False ):
 
     for character_xml in xml['guildInfo']['guild']['members']['character':]:
         name = character_xml('name')
-        logging.info( "seen character %s in XML (%s)"%( name, character_xml.__repr__(1) ) )
+        logging.debug( "seen character %s in XML (%s)"%( name, character_xml.__repr__(1) ) )
         character = Character.find_or_create( guild.continent, guild.realm, name )
         dirty = False
         try:
-            if (not character.guild) or (character.guild != guild):
-                logging.info("guild changed: %s != %s"%( character.guild, guild ))
+            if (not character.guild) or (character.guild.key() != guild.key()):
+                logging.info("guild for %s changed or new")
                 character.guild = guild
                 dirty = True
         except datastore_errors.Error:
@@ -107,11 +114,13 @@ def guild( guild, force = False ):
     guild.last_fetch = datetime.utcnow()
 
     # save all characters at once.
-    logging.info("saving %s characters"%len( dirty_characters ))
-
+    if len(dirty_characters):
+        logging.info("saving %s characters"%len( dirty_characters ))
     db.put( dirty_characters + [ guild ] )
 
-    logging.info("adding %s characters to refresh queue"%len( needs_refresh ))
+    if len(needs_refresh):
+        logging.info("adding %s characters to refresh queue"%len( needs_refresh ))
+
     for key in needs_refresh:
         taskqueue.add(url='/fetcher/character/', params={'key': key})
     
@@ -138,7 +147,7 @@ def character( guild, character, force = False ):
     try:
         for ach in char_xml['achievements']['summary']['achievement':]:
             achievement = Achievement.find_or_create( ach('id'), ach('title'), ach('desc'), ach('icon') )
-            logging.info( "seen achievement %s"%( achievement.name ))
+            logging.debug( "seen achievement %s"%( achievement.name ))
             if achievement.armory_id not in character.achievement_ids:
                 logging.info( "adding achievement %s"%( achievement.name ))
                 added_count += 1
@@ -166,20 +175,20 @@ def backfill( guild, character, char_xml = None ):
     for category in char_xml['achievements']['rootCategories']:
         logging.info("   fetching category %s: %s"%( category('id'), category('name') ) )
         try:
-            category_xml = fetch(character.armory_url() + u"&c=%s"%category("id") )
+            dom = etree.parse( StringIO(fetch_raw(character.armory_url() + u"&c=%s"%category("id") )) )
         except FetchError:
             return # failed.
         
-        for ach in category_xml['category']:
+        for ach in dom.findall('//achievement'):
             # add completed achievements only:
-            try: ach('dateCompleted') # raises keyerror
-            except KeyError: continue
+            if not ach.get('dateCompleted'):
+                continue
 
-            achievement = Achievement.find_or_create( ach('id'), ach('title'), ach('desc'), ach('icon') )
+            achievement = Achievement.find_or_create( ach.get('id'), ach.get('title'), ach.get('desc'), ach.get('icon') )
             if achievement.armory_id not in character.achievement_ids:
                 logging.info( "adding achievement %s"%( achievement.name ))
                 character.achievement_ids.append( achievement.armory_id )
-                character.achievement_dates.append( iso8601.parse_date(ach("dateCompleted")) )
+                character.achievement_dates.append( iso8601.parse_date(ach.get("dateCompleted")) )
     
     character.last_fetch = datetime.utcnow()
     character.put()

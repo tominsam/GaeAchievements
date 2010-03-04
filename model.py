@@ -24,9 +24,9 @@ class BaseModel(db.Model):
         key_name = cls.key_name(*args)
         cached = memcache.get( key_name )
         if cached:
-            logging.info("using cached %s [%s]"%(cls, repr(args)))
+            logging.debug("using cached %s [%s]"%(cls, repr(args)))
             return cached
-        logging.info("not cached %s [%s]"%(cls, repr(args)))
+        logging.debug("not cached %s [%s]"%(cls, repr(args)))
         instance = cls.lookup( *args )
         memcache.set( key_name, instance )
         return instance
@@ -36,13 +36,11 @@ class BaseModel(db.Model):
         keys = []
         for args in ids:
             keys.append( cls.key_name( *args ) )
-        logging.info(repr(keys))
         found = memcache.get_multi( keys )
-        logging.info(repr(found))
         added = {}
         for key in keys:
             if key not in found:
-                logging.info("%s not cached - fetching"%( key ))
+                logging.debug("%s not cached - fetching"%( key ))
                 found[key] = cls.get_by_key_name(key)
                 if found[key]:
                     added[key] = found[key]
