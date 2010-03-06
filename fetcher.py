@@ -139,44 +139,38 @@ def guild( guild, force = False ):
 def character( guild, character, force = False ):
     if not guild and not character.guild:
         # erase characters without a guild
+        logging.info("deleting guildless character %s"%character.name)
         character.delete()
         return
 
     try:
-        char_xml = fetch( character.armory_url() )
+        raw_xml = fetch_raw( character.armory_url() )
     except FetchError:
+        logging.info("fetcherror")
         return # normally this is an armory failure. I'm not going to put clever handling in here.
     
+    char_xml = xmltramp.parse( raw_xml )
     try:
         char = char_xml['characterInfo']['character']
     except KeyError:
+        logging.info("keyerror")
         return # normally armoury error
 
     character.achPoints = long(char('points'))
     
-    added_count = 0
-    try:
-        for ach in char_xml['achievements']['summary']['achievement':]:
-            achievement = Achievement.find_or_create( ach('id'), ach('title'), ach('desc'), ach('icon') )
-            logging.debug( "seen achievement %s"%( achievement.name ))
-            if achievement.armory_id not in character.achievement_ids:
-                logging.info( "adding achievement %s"%( achievement.name ))
-                added_count += 1
-                character.achievement_ids.append( achievement.armory_id )
-                character.achievement_dates.append( iso8601.parse_date(ach("dateCompleted")) )
-
-    except KeyError:
-        # achievments key not present. No achievements.
-        pass
-        
+    added_count = add_achievements( character, raw_xml )
     if added_count >= 5:
-        # me might have missed some. We need a full backfill.
-        return backfill( guild, character, char_xml )
+        logging.info("Seen 5 new achievements - running backfill")
+        # returns, because backfill does save itself
+        return backfill( character, char_xml )
     
+    logging.info("added %d achievements"%added_count)
+
+    # otherwise we're done.
     character.last_fetch = datetime.utcnow()
     character.put()
 
-def backfill( guild, character, char_xml = None ):
+def backfill( character, char_xml = None ):
     if not char_xml:
         try:
             char_xml = fetch( character.armory_url() )
@@ -224,6 +218,8 @@ def add_achievements( character, xml ):
             achievement = Achievement.find_or_create( ach.get('id'), ach.get('title'), ach.get('desc'), ach.get('icon') )
         character.achievement_ids.append( achievement.armory_id )
         character.achievement_dates.append( iso8601.parse_date(ach.get("dateCompleted")) )
+    
+    return len( added )
 
 
 
