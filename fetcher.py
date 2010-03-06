@@ -192,26 +192,38 @@ def backfill( guild, character, char_xml = None ):
         try:
             result = rpc.get_result()
             if result.status_code == 200:
-                logging.debug("dequeued %s"%rpc)
-                dom = etree.parse( StringIO(result.content) )
+                logging.info("dequeued %s"%rpc)
+                add_achievements( character, result.content )
             else:
                 return # failed
         except urlfetch.DownloadError:
             return # failed.
-        
-        for ach in dom.findall('//achievement'):
-            # add completed achievements only:
-            if not ach.get('dateCompleted'):
-                continue
-
-            achievement = Achievement.find_or_create( ach.get('id'), ach.get('title'), ach.get('desc'), ach.get('icon') )
-            if achievement.armory_id not in character.achievement_ids:
-                logging.info( "adding achievement %s"%( achievement.name ))
-                character.achievement_ids.append( achievement.armory_id )
-                character.achievement_dates.append( iso8601.parse_date(ach.get("dateCompleted")) )
     
     character.last_fetch = datetime.utcnow()
     character.put()
+
+def add_achievements( character, xml ):
+    dom = etree.parse( StringIO(xml) )
+    
+    added = []
+    for ach in dom.findall('//achievement'):
+        # add completed achievements only:
+        if not ach.get('dateCompleted'):
+            continue
+
+        if int(ach.get("id")) not in character.achievement_ids:
+            logging.info( "not seen achievement %s"%( ach.get("title") ))
+            added.append(ach)
+    
+    cached = Achievement.lookup_many_cached([ [x.get('id')] for x in added ])
+    for ach in added:
+        try:
+            achievement = cached[ Achievement.key_name(ach.get("id")) ]
+        except KeyError:
+            logging.info("cache miss for Achievement [%s] %s"%(ach.get("id"), ach.get("title")))
+            achievement = Achievement.find_or_create( ach.get('id'), ach.get('title'), ach.get('desc'), ach.get('icon') )
+        character.achievement_ids.append( achievement.armory_id )
+        character.achievement_dates.append( iso8601.parse_date(ach.get("dateCompleted")) )
 
 
 
