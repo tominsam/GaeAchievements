@@ -13,15 +13,19 @@ class HourlyCron(webapp.RequestHandler):
         logging.info("cron handler fired")
         guilds = Guild.all( keys_only = True ).filter( "last_fetch =", None ).fetch(100)
         guilds += Guild.all( keys_only = True ).filter( "last_fetch <", datetime.utcnow() - timedelta( hours = 3 ) ).fetch(100)
+        queue = taskqueue.Queue( name = "guild" )
         for g in guilds:
-            taskqueue.add(url='/fetcher/guild/', params={'key': str(g)})
+            task = taskqueue.Task(url='/fetcher/guild/', params={'key': str(g)})
+            queue.add(task)
             self.response.out.write("queued %s"%g)
         
         characters = Character.all( keys_only = True ).filter( "last_fetch =", None ).fetch(100)
         # schedule at most 100 chars an hour
         if len(characters) < 100:
             characters += Character.all( keys_only = True ).filter( "last_fetch <", datetime.utcnow() - timedelta( hours = 3 ) ).fetch( 100 - len(characters) )
+        queue = taskqueue.Queue( name = "character" )
         for c in characters:
-            taskqueue.add(url='/fetcher/character/', params={'key': str(c)})
+            task = taskqueue.Task(url='/fetcher/character/', params={'key': str(c)})
+            queue.add(task)
             self.response.out.write("queued %s"%c)
 
