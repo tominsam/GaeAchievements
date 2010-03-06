@@ -50,6 +50,15 @@ def fetch_raw( url ):
     
     raise FetchError()
 
+def fetch_async( url ):
+    # Need to specify firefox as user agent as this makes the server return an XML file.
+    rpc = urlfetch.create_rpc()
+    urlfetch.make_fetch_call(rpc,
+        url = url,
+        headers = { "User-Agent":'Mozilla/5.0 (Windows; U; Windows NT 5.0; en-GB; rv:1.8.1.4) Gecko/20070515 Firefox/2.0.0.4' }
+    )
+    return rpc
+
 
 def guild( guild, force = False ):
     try:
@@ -171,12 +180,21 @@ def backfill( guild, character, char_xml = None ):
             char_xml = fetch( character.armory_url() )
         except FetchError:
             return # normally an armory error
-
+    
+    fetches = []
     for category in char_xml['achievements']['rootCategories']:
         logging.info("   fetching category %s: %s"%( category('id'), category('name') ) )
+        fetches.append( fetch_async( character.armory_url() + u"&c=%s"%category("id") ) )
+    
+    for rpc in fetches:
         try:
-            dom = etree.parse( StringIO(fetch_raw(character.armory_url() + u"&c=%s"%category("id") )) )
-        except FetchError:
+            result = rpc.get_result()
+            if result.status_code == 200:
+                logging.debug("dequeued %s"%rpc)
+                dom = etree.parse( StringIO(result.content) )
+            else:
+                return # failed
+        except urlfetch.DownloadError:
             return # failed.
         
         for ach in dom.findall('//achievement'):
