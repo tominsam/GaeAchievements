@@ -58,7 +58,7 @@ class BaseModel(db.Model):
     def put(self):
         memcache.delete( self.key().name() )
         return super( BaseModel, self ).put()
-
+    
 class Guild(BaseModel):
     owner = db.UserProperty()
 
@@ -200,12 +200,13 @@ class Achievement(BaseModel):
         instance = cls.get_by_key_name( key_name )
         if not instance:
             instance = Achievement( key_name = key_name )
+            instance.armory_id = long(armory_id)
+            instance.name = name
+            instance.description = description
+            instance.image = "http://www.wowarmory.com/wow-icons/_images/51x51/%s.jpg"%( icon )
+            instance.put() # TODO - dirty flag
 
-        instance.armory_id = long(armory_id)
-        instance.name = name
-        instance.description = description
-        instance.image = "http://www.wowarmory.com/wow-icons/_images/51x51/%s.jpg"%( icon )
-        instance.put() # TODO - dirty flag
+        memcache.set( key_name, instance )
         
         return instance
     
