@@ -1,0 +1,2 @@
+python2.5 /usr/local/bin/appcfg.py request_logs . recent.log --append -e tom.insam@gmail.com 
+

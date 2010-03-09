@@ -1,0 +1,5 @@
+queue:
+- name: guild
+  rate: 10/m
+- name: character
+  rate: 5/m
