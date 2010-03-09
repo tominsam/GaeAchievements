@@ -206,14 +206,18 @@ def add_achievements( character, xml ):
             continue
 
         if int(ach.get("id")) not in character.achievement_ids:
-            logging.info( "not seen achievement %s"%( ach.get("title") ))
+            #logging.info( "not seen achievement %s"%( ach.get("title") ))
             added.append(ach)
+    
+    logging.info("found %d achievments to add"%( len(added) ) )
     
     cached = Achievement.lookup_many_cached([ [x.get('id')] for x in added ])
     for ach in added:
         try:
             achievement = cached[ Achievement.key_name(ach.get("id")) ]
         except KeyError:
+            pass
+        if not achievement:
             logging.info("cache miss for Achievement [%s] %s"%(ach.get("id"), ach.get("title")))
             achievement = Achievement.find_or_create( ach.get('id'), ach.get('title'), ach.get('desc'), ach.get('icon') )
         character.achievement_ids.append( achievement.armory_id )
