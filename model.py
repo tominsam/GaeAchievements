@@ -37,15 +37,16 @@ class BaseModel(db.Model):
         for args in ids:
             keys.append( cls.key_name( *args ) )
         found = memcache.get_multi( keys )
-        added = {}
+        missing = []
         for key in keys:
             if key not in found:
-                logging.debug("%s not cached - fetching"%( key ))
-                found[key] = cls.get_by_key_name(key)
-                if found[key]:
-                    added[key] = found[key]
-                else:
-                    logging.info("Failed to fetch %s"%key)
+                missing.append(key)
+        logging.info("%d objects not cached - fetching"%( len(missing) ))
+        fetched = cls.get_by_key_name(missing)
+        added = {}
+        for key, instance in zip( missing, fetched ):
+            found[key] = instance
+            added[key] = found[key]
         
         if added.keys():
             memcache.add_multi( added )
