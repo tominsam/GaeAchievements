@@ -90,7 +90,7 @@ def guild( guild, force = False ):
         dirty = False
         try:
             if (not character.guild) or (character.guild.key() != guild.key()):
-                logging.info("guild for %s changed or new")
+                logging.info("guild for %s is changed or new"%character.name)
                 character.guild = guild
                 dirty = True
         except datastore_errors.Error:
