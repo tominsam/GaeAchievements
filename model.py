@@ -134,6 +134,7 @@ class Guild(BaseModel):
         cache[ character.name ] = {
             "character_name":character.name,
             "character_url":character.url(),
+            "character_key":str(character.key()),
             "achievement_ids":character.achievement_ids,
             "achievement_dates":character.achievement_dates,
         }
@@ -193,6 +194,7 @@ class Character(BaseModel):
         return c
 
     def raceName(self):
+        # TODO - fill in the rest of the races
         if self.raceId:
             return {
                 2:"Orc",
@@ -201,7 +203,7 @@ class Character(BaseModel):
                 8:"Troll",
                 10:"Blood Elf",
             }[ self.raceId ]
-        return None
+        return "unknown race"
     
     def className(self):
         if self.classId:
@@ -217,7 +219,7 @@ class Character(BaseModel):
                 9:"Warlock",
                 11:"Druid",
             }[ self.classId ]
-        return None
+        return "unknown class"
 
     def url(self):
         return "/%s/%s/character/%s/"%( self.continent, self.realm_urltoken, self.urltoken )
