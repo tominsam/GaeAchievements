@@ -5,7 +5,7 @@ from utils import slugify
 import logging
 from datetime import datetime
 import urllib
-import yaml
+import cPickle as pickle
 
 class BaseModel(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
@@ -76,7 +76,7 @@ class Guild(BaseModel):
     weekly_email_last = db.DateTimeProperty()
     weekly_email_address = db.StringProperty()
     
-    achievements_cache = db.TextProperty()
+    achievements_cache = db.BlobProperty()
     
     @classmethod
     def find_or_create(cls, continent, realm, name):
@@ -119,12 +119,12 @@ class Guild(BaseModel):
         return "http://%s/guild-info.xml?r=%s&n=%s&p=1"%( self.server(), urllib.quote(self.realm.encode('utf-8'),''), urllib.quote(self.name.encode('utf-8'),'') )
     
     def set_achievements_cache( self, obj ):
-        self.achievements_cache = yaml.dump( obj )
+        self.achievements_cache = pickle.dumps( obj )
 
     def get_achievements_cache( self ):
         if self.achievements_cache:
             try:
-                return yaml.load( self.achievements_cache )
+                return pickle.loads( self.achievements_cache )
             except Exception:
                 return {} # invalid cache object
         return {}
@@ -143,7 +143,19 @@ class Guild(BaseModel):
         cache = self.get_achievements_cache()
         del cache[ character.name ]
         self.set_achievements_cache( cache )
-        
+    
+    def unified_achievement_list(self):
+        cache = self.get_achievements_cache()
+        achievement_data = []
+        for key, data in cache.iteritems():
+            for achievement_id, date in zip( data["achievement_ids"], data["achievement_dates"] ):
+                achievement_data.append({
+                    "date":date.date(),
+                    "character_name":data["character_name"],
+                    "character_url":data["character_url"],
+                    "achievement_id":achievement_id, # look up objects _after_ list truncate
+                })
+        return achievement_data
 
 
 class Character(BaseModel):
