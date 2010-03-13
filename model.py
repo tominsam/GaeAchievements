@@ -123,16 +123,19 @@ class Guild(BaseModel):
 
     def get_achievements_cache( self ):
         if self.achievements_cache:
-            return yaml.load( self.achievements_cache )
+            try:
+                return yaml.load( self.achievements_cache )
+            except Exception:
+                return {} # invalid cache object
         return {}
     
     def update_achievements_cache_for( self, character ):
         cache = self.get_achievements_cache()
         cache[ character.name ] = {
-            "name":character.name,
-            "url":character.url,
-            "ids":character.achievement_ids,
-            "dates":character.achievement_dates,
+            "character_name":character.name,
+            "character_url":character.url(),
+            "achievement_ids":character.achievement_ids,
+            "achievement_dates":character.achievement_dates,
         }
         self.set_achievements_cache( cache )
     
