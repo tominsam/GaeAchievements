@@ -42,7 +42,7 @@ class BaseHandler(webapp.RequestHandler):
 
         # limit to most recent entries
         def by_date(a, b):
-            return cmp(b['date'], a['date'])
+            return cmp(b['date'], a['date']) or cmp(a['achievement_id'], b['achievement_id'])
         achievement_data.sort(by_date)
         achievement_data = achievement_data[offset:offset+limit]
 

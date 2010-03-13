@@ -87,7 +87,7 @@ def send_weekly_summary( guild, email = None, request = None ):
     html = template.render( locals() )
     
     mail.send_mail(
-        sender="Tom's Magical Mail Sending Robot <tom@jerakeen.org>",
+        sender="Tom's Magical Mail Sending Robot <tom.insam@gmail.com>",
         to=email,
         subject="The magical world of %s, week beginning %s"%( guild.name, start.strftime("%d %B") ),
         body=body,
