@@ -11,13 +11,11 @@
 {% endif %}
 
 #   set old_date = None
-#   for data in achievement_data
-#     if old_date != data.date
-        <h2>{{ data.date.strftime("%A %d %B %Y") }}</h2>
-#       set old_date = data.date
+#   for record in achievement_data
+#     if old_date != record.date
+        <h2>{{ record.date.strftime("%A %d %B %Y") }}</h2>
+#       set old_date = record.date
 #     endif
-#     set achievement = data.achievement
-#     set character = data.character
 #     include "_achievement.html"
 #   endfor
 

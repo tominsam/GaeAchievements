@@ -14,38 +14,45 @@ jinja2_env = Environment(
     autoescape=True
 )
 
-def build_achievement_list( characters, limit = 20, offset = 0 ):
-    achievement_data = []
-    for character in characters:
-        for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
-            achievement_data.append({
-                "date":date.date(),
-                "character":character,
-                "achievement_id":achievement_id, # look up objects _after_ list truncate
-            })
-    
-    # limit to most recent entries
-    def by_date(a, b):
-        return cmp(b['date'], a['date'])
-    achievement_data.sort(by_date)
-    achievement_data = achievement_data[offset:offset+limit]
-    
+def populate_achievement_objects( achievement_data ):
     lookup_ids = []
     for a in achievement_data:
         lookup_ids.append( [ a['achievement_id'] ] )
     looked_up = Achievement.lookup_many_cached( lookup_ids )
-
     for a in achievement_data:
         a["achievement"] = looked_up[ Achievement.key_name(a['achievement_id']) ]
-        
-    return achievement_data
-    
+
 class BaseHandler(webapp.RequestHandler):
     def render( self, template_name, vars ):
         template = jinja2_env.get_template(template_name)
         vars['users'] = users
         vars['user'] = users.get_current_user()
         self.response.out.write(template.render(vars))
+
+    def paginate(self, achievement_data):
+        total = len(achievement_data)
+        limit = 20
+        total_pages = int(total / limit) + 1
+        try:
+            page = int(self.request.get("page"))
+        except ValueError:
+            page = 1
+        if page < 1: page = 1
+        offset = ( page - 1 ) * limit
+
+        # limit to most recent entries
+        def by_date(a, b):
+            return cmp(b['date'], a['date'])
+        achievement_data.sort(by_date)
+        achievement_data = achievement_data[offset:offset+limit]
+
+        populate_achievement_objects( achievement_data )
+        
+        # TODO - it could be nice to populate Character objects here like we do
+        # with achievmenet objects.
+        
+        
+        return { "achievement_data":achievement_data, "page":page, "total_pages":total_pages }
 
 class RootHandler(BaseHandler):
 
@@ -79,6 +86,7 @@ class RootHandler(BaseHandler):
         
         self.redirect( guild.url() )
 
+
 class GuildMainHandler(BaseHandler):
 
     def get(self, continent, realm, urltoken):
@@ -86,22 +94,12 @@ class GuildMainHandler(BaseHandler):
         if not guild:
             return self.error(404)
         
-        limit = 20
-        ids = []
-        all_characters = guild.character_set.fetch(1000)
-
-        for c in all_characters: ids += c.achievement_ids
-        total_pages = int(len(ids) / limit) + 1
-        try:
-            page = int(self.request.get("page"))
-        except ValueError:
-            page = 1
-        if page < 1: page = 1
-        offset = ( page - 1 ) * limit
+        achievement_data = guild.unified_achievement_list()
         
-        achievement_data = build_achievement_list( all_characters, limit = limit, offset = offset )
+        template_vars = self.paginate( achievement_data )
 
-        self.render( "guild.html", locals() )
+        template_vars["guild"] = guild
+        self.render( "guild.html", template_vars )
 
 class GuildMembersHandler(BaseHandler):
 
@@ -118,22 +116,16 @@ class GuildAchievementHandler(BaseHandler):
         achievement = Achievement.lookup_cached( achievement_id )
         if not achievement and guild:
             return self.error(404)
-        
-        achievement_data = []
-        for character in guild.character_set.filter( "achievement_ids =", achievement.armory_id ):
-            for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
-                if achievement_id == achievement.armory_id:
-                    achievement_data.append({
-                        "date":date.date(),
-                        "character":character,
-                        "achievement":achievement,
-                    })
 
-        def by_date(a, b):
-            return cmp(b['date'], a['date'])
-        achievement_data.sort(by_date)
+        achievement_data = guild.unified_achievement_list()
+
+        achievement_data = filter(lambda d: d['achievement_id'] == achievement.armory_id, achievement_data)
+        
+        template_vars = self.paginate( achievement_data )
+        template_vars["guild"] = guild
+        template_vars["achievement"] = achievement
     
-        self.render( "guild_achievement.html", locals() )
+        self.render( "guild_achievement.html", template_vars )
 
 class CharacterHandler(BaseHandler):
 
@@ -142,17 +134,17 @@ class CharacterHandler(BaseHandler):
         if not character:
             return self.error(404)
         
-        limit = 20
-        total_pages = int(len(character.achievement_ids) / limit) + 1
-        try:
-            page = int(self.request.get("page"))
-        except ValueError:
-            page = 1
-        if page < 1: page = 1
-        offset = ( page - 1 ) * limit
-
-        achievement_data = build_achievement_list( [ character ], limit = limit, offset = offset )
-        guild = character.guild
-
-        self.render( "character.html", locals() )
+        achievement_data = []
+        for achievement_id, date in zip( character.achievement_ids, character.achievement_dates ):
+            achievement_data.append({
+                "date":date.date(),
+                "character_name":character.name,
+                "character_url":character.url(),
+                "achievement_id":achievement_id, # look up objects _after_ list truncate
+            })
+    
+        template_vars = self.paginate( achievement_data )
+        template_vars["guild"] = character.guild
+        template_vars["character"] = character
+        self.render( "character.html", template_vars )
 
