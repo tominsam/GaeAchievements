@@ -15,7 +15,7 @@ def weekly_summaries():
     guilds = Guild.all().filter( "weekly_email_last", None ).fetch(100)
     if len(guilds) < 100:
         guilds += Guild.all().filter( "weekly_email_last <",  datetime.utcnow() - timedelta( days = 2 ) )
-    
+
     queue = taskqueue.Queue( name = "mailer" )
     for guild in guilds:
         if guild.weekly_email_address:
@@ -28,14 +28,13 @@ def send_weekly_summary( guild, email = None, request = None ):
 
     if not email:
         raise Exception("no email address for guild %s/%s/%s"%( guild.continent, guild.realm, guild.name ))
-    
+
     logging.info("sending mail for guild %s/%s/%s"%( guild.continent, guild.realm, guild.name ))
 
     start = datetime.utcnow() - timedelta( days = 7 )
 
     achievement_data = guild.unified_achievement_list()
     achievement_data = filter(lambda d: d['date'].isoformat() >= start.isoformat(), achievement_data)
-    
 
     # TODO - this is cloned from web_handler
     lookup_ids = []
@@ -57,10 +56,10 @@ def send_weekly_summary( guild, email = None, request = None ):
             if not character.name in people:
                 people[ character.name ] = [ data['character'], [] ]
             people[ character.name ][1].append( data )
-    
+
     people = people.values()
     people.sort(lambda a,b: cmp( b[0].achPoints, a[0].achPoints ) )
-    
+
     level_80 = guild.character_set.filter( "level", 80 ).count()
     total = guild.character_set.count()
 
@@ -73,7 +72,7 @@ def send_weekly_summary( guild, email = None, request = None ):
         line_statement_prefix="#",
         autoescape=True
     )
-    
+
     if request:
         root = "http://%s"%( request.host )
     else:
@@ -82,10 +81,15 @@ def send_weekly_summary( guild, email = None, request = None ):
     logging.info("root is %s"%root)
     template = jinja2_env.get_template("email_text.html")
     body = template.render( locals() )
-    
+
     template = jinja2_env.get_template("email_html.html")
     html = template.render( locals() )
-    
+
+    # save guild first so that failure case is that we don't send mail,
+    # rather than sending lots of mail
+    guild.weekly_email_last = datetime.utcnow()
+    guild.put()
+
     mail.send_mail(
         sender="Tom's Magical Mail Sending Robot <tom.insam@gmail.com>",
         to=email,
@@ -93,7 +97,4 @@ def send_weekly_summary( guild, email = None, request = None ):
         body=body,
         html=html
     )
-    
-    # TODO - race condition here. Maybe save guild _first_?
-    guild.weekly_email_last = datetime.utcnow()
-    guild.put()
+
