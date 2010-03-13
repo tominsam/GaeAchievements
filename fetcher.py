@@ -160,15 +160,17 @@ def character( guild, character, force = False ):
     
     added_count = add_achievements( character, raw_xml )
     if added_count >= 5:
-        logging.info("Seen 5 new achievements - running backfill")
-        # returns, because backfill does save itself
-        return backfill( character, char_xml )
+        logging.info("Seen at least 5 new achievements - running backfill")
+        added_count = backfill( character, char_xml )
     
     logging.info("added %d achievements"%added_count)
 
     # otherwise we're done.
     character.last_fetch = datetime.utcnow()
     character.put()
+
+    guild.update_achievements_cache_for( character )
+    guild.put()
 
 def backfill( character, char_xml = None ):
     if not char_xml:
@@ -182,19 +184,20 @@ def backfill( character, char_xml = None ):
         logging.info("   fetching category %s: %s"%( category('id'), category('name') ) )
         fetches.append( fetch_async( character.armory_url() + u"&c=%s"%category("id") ) )
     
+    added = 0
+
     for rpc in fetches:
         try:
             result = rpc.get_result()
             if result.status_code == 200:
                 logging.info("dequeued %s"%rpc)
-                add_achievements( character, result.content )
+                added += add_achievements( character, result.content )
             else:
                 return # failed
         except urlfetch.DownloadError:
             return # failed.
     
-    character.last_fetch = datetime.utcnow()
-    character.put()
+    return added
 
 def add_achievements( character, xml ):
     dom = etree.parse( StringIO(xml) )

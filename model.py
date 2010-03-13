@@ -5,6 +5,7 @@ from utils import slugify
 import logging
 from datetime import datetime
 import urllib
+import yaml
 
 class BaseModel(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
@@ -72,6 +73,11 @@ class Guild(BaseModel):
     last_fetch = db.DateTimeProperty()
     fetch_error = db.StringProperty()
     
+    weekly_email_last = db.DateTimeProperty()
+    weekly_email_address = db.StringProperty()
+    
+    achievements_cache = db.TextProperty()
+    
     @classmethod
     def find_or_create(cls, continent, realm, name):
         continent = continent.lower()
@@ -111,6 +117,23 @@ class Guild(BaseModel):
     
     def armory_url(self):
         return "http://%s/guild-info.xml?r=%s&n=%s&p=1"%( self.server(), urllib.quote(self.realm.encode('utf-8'),''), urllib.quote(self.name.encode('utf-8'),'') )
+    
+    def set_achievements_cache( self, obj ):
+        self.achievements_cache = yaml.dump( obj )
+
+    def get_achievements_cache( self ):
+        if self.achievements_cache:
+            return yaml.load( self.achievements_cache )
+        return {}
+    
+    def update_achievements_cache_for( self, character ):
+        cache = self.get_achievements_cache()
+        cache[ character.name ] = {
+            "name":character.name,
+            "ids":character.achievement_ids,
+            "dates":character.achievement_dates,
+        }
+        self.set_achievements_cache( cache )
 
 
 class Character(BaseModel):
