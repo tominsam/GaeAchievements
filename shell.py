@@ -84,7 +84,9 @@ INITIAL_UNPICKLABLES += [
   'import logging',
   'import os',
   'import sys',
-  'class Foo(db.Expando):\n  pass',
+  'from model import *',
+  'import fetcher',
+  'import mailer',
   ]
 
 

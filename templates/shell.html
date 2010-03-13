@@ -94,7 +94,7 @@ Python {{ python_version }}
             onfocus="document.getElementById('statement').focus()"
             >&gt;&gt;&gt;</textarea>
   <textarea class="prompt" name="statement" id="statement" rows="4"
-            onkeypress="return shell.onPromptKeyPress(event);"></textarea>
+            onkeydown="return shell.onPromptKeyPress(event);"></textarea>
   </nobr>
   <input type="hidden" name="session" value="{{ session }}" />
   <input type="submit" style="display: none" />
