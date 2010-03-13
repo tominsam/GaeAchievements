@@ -118,6 +118,7 @@ def guild( guild, force = False ):
         if not character.key() in found:
             logging.info("removing character %s from guild"%( character.name ))
             character.guild = None
+            guild.remove_character_from_cache( character )
             found.append( character.key() )
 
     guild.last_fetch = datetime.utcnow()

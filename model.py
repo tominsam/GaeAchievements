@@ -130,10 +130,17 @@ class Guild(BaseModel):
         cache = self.get_achievements_cache()
         cache[ character.name ] = {
             "name":character.name,
+            "url":character.url,
             "ids":character.achievement_ids,
             "dates":character.achievement_dates,
         }
         self.set_achievements_cache( cache )
+    
+    def remove_character_from_cache( self, character ):
+        cache = self.get_achievements_cache()
+        del cache[ character.name ]
+        self.set_achievements_cache( cache )
+        
 
 
 class Character(BaseModel):
