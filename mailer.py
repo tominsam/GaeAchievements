@@ -29,6 +29,8 @@ def send_weekly_summary( guild, email = None, request = None ):
     if not email:
         raise Exception("no email address for guild %s/%s/%s"%( guild.continent, guild.realm, guild.name ))
     
+    logging.info("sending mail for guild %s/%s/%s"%( guild.continent, guild.realm, guild.name ))
+
     start = datetime.utcnow() - timedelta( days = 7 )
 
     achievement_data = guild.unified_achievement_list()
@@ -59,15 +61,12 @@ def send_weekly_summary( guild, email = None, request = None ):
     people = people.values()
     people.sort(lambda a,b: cmp( b[0].achPoints, a[0].achPoints ) )
     
-    logging.info( repr( people )) 
-
     level_80 = guild.character_set.filter( "level", 80 ).count()
     total = guild.character_set.count()
 
     levels = filter(lambda d: re.search(r'Level \d', d['achievement'].name), achievement_data )
     levels = map(lambda d: [ d['character'], int( re.search(r'Level (\d+)', d["achievement"].name).group(1) ) ], levels)
     levels.sort(lambda a, b: cmp(b[1], a[1])) # sort by level, reversed
-    logging.info( repr(levels) )
 
     jinja2_env = Environment(
         loader=FileSystemLoader('templates'),
@@ -80,6 +79,7 @@ def send_weekly_summary( guild, email = None, request = None ):
     else:
         root = "http://dummy"
 
+    logging.info("root is %s"%root)
     template = jinja2_env.get_template("email_text.html")
     body = template.render( locals() )
     

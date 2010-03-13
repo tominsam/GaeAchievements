@@ -6,6 +6,7 @@ from google.appengine.api.labs import taskqueue
 
 from model import *
 import fetcher
+import mailer
 
 class GuildFetcher(webapp.RequestHandler):
     def post(self):
