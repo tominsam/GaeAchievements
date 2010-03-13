@@ -14,6 +14,7 @@ def main():
         (r'/(\w{2})/(.*?)/character/(.*?)/', CharacterHandler),
         ('/fetcher/guild/', GuildFetcher),
         ('/fetcher/character/', CharacterFetcher),
+        ('/queue/mailer/', GuildMailer),
         ('/cron/hourly/', HourlyCron),
         
     ], debug=True)

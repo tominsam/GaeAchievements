@@ -1,0 +1,20 @@
+Hello campers! It's been another exciting week in Guild-land for {{ guild.name }}. We currently have {{ level_80 }} level 80s, and {{ total }} members.
+
+{% if levels %}
+Exciting milestones:
+{% for character, level in levels %}
+ * {{ character.name }} hit {{ level }}!{% endfor %}
+{% endif %}
+
+In the last week..
+
+{% for character, achievement_data in people %}
+{{ character.name }} (level {{ character.level }} {{ character.className() }}, {{ character.achPoints }} achievement points) gained the following achievements:
+{% for item in achievement_data %}
+ * {{ item.achievement.name }} ({{ item.achievement.description }}){% endfor %}
+<{{ root }}{{ character.url() }}>
+
+{% endfor %}
+See everything that's going down on the guild page
+
+<{{ root }}{{ guild.url() }}>

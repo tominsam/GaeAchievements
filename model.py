@@ -154,7 +154,8 @@ class Guild(BaseModel):
                     "date":date.date(),
                     "character_name":data["character_name"],
                     "character_url":data["character_url"],
-                    "achievement_id":achievement_id, # look up objects _after_ list truncate
+                    "character_key":data["character_key"],
+                    "achievement_id":achievement_id, # used to look up objects _after_ list truncate
                 })
         return achievement_data
 

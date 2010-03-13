@@ -1,0 +1,29 @@
+<p>Hello campers! It's been another exciting week in Guild-land for <a href="{{ root }}{{ guild.url() }}">{{ guild.name }}</a>.
+  We currently have {{ level_80 }} level 80s, and {{ total }} members.</p>
+
+{% if levels %}
+  <p>Exciting milestones:</p>
+  <ul>
+  {% for character, level in levels %}
+    <li><a href="{{ root }}{{ character.url() }}">{{ character.name }}</a> hit level {{ level }}!</li>
+  {% endfor %}
+  </ul>
+{% endif %}
+
+<p>In the last week..</p>
+
+{% for character, items in people %}
+<p><a href="{{ root }}{{ character.url() }}">{{ character.name }}</a>
+  (level {{ character.level }} {{ character.className() }},
+  {{ character.achPoints }} achievement points)
+  gained the following achievements:</p>
+
+<ul>
+  {% for item in items %}
+    <li><a href="{{ root }}{{ item.achievement.url(item.character.guild) }}">{{ item.achievement.name }}</a>
+      ({{ item.achievement.description }})</li>
+  {% endfor %}
+</ul>
+{% endfor %}
+
+<p>See everything that's going down <a href="{{ root }}{{ guild.url() }}">on the guild page</a>.</p>

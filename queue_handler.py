@@ -28,3 +28,14 @@ class CharacterFetcher(webapp.RequestHandler):
         except Exception, e:
             self.response.out.write(e)
             raise
+
+class GuildMailer(webapp.RequestHandler):
+    def post(self):
+        try:
+            key = self.request.get('key')
+            guild = Guild.get( key )
+            if guild:
+                mailer.send_weekly_summary( guild, request = self.request )
+        except Exception, e:
+            self.response.out.write(e)
+            raise
