@@ -16,6 +16,7 @@ def main():
         ('/fetcher/character/', CharacterFetcher),
         ('/queue/mailer/', GuildMailer),
         ('/cron/hourly/', HourlyCron),
+        ('.*', NotFound),
         
     ], debug=True)
     util.run_wsgi_app(application)

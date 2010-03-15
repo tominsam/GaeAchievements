@@ -148,3 +148,9 @@ class CharacterHandler(BaseHandler):
         template_vars["character"] = character
         self.render( "character.html", template_vars )
 
+class NotFound(BaseHandler):
+
+    def get(self):
+        self.error(404)
+        self.render("404.html", {})
+
