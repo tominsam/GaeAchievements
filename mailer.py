@@ -5,6 +5,7 @@ import itertools
 import re
 
 from model import *
+from google.appengine.api.labs import taskqueue
 
 from jinja2 import Environment, FileSystemLoader
 

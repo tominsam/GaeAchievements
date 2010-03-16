@@ -7,6 +7,7 @@ from google.appengine.api.labs import taskqueue
 
 from model import *
 import fetcher
+import mailer
 
 class HourlyCron(webapp.RequestHandler):
     def get(self):
@@ -28,4 +29,9 @@ class HourlyCron(webapp.RequestHandler):
             task = taskqueue.Task(url='/fetcher/character/', params={'key': str(c)})
             queue.add(task)
             self.response.out.write("queued %s"%c)
+
+class WeeklyCron(webapp.RequestHandler):
+    def get(self):
+        logging.info("weekly cron handler fired")
+        mailer.weekly_summaries()
 

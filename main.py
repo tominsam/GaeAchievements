@@ -17,6 +17,7 @@ def main():
         ('/fetcher/character/', CharacterFetcher),
         ('/queue/mailer/', GuildMailer),
         ('/cron/hourly/', HourlyCron),
+        ('/cron/weekly/', WeeklyCron),
         ('.*', NotFound),
         
     ], debug=True)

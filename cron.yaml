@@ -2,3 +2,8 @@ cron:
 - description: hourly cron
   url: /cron/hourly/
   schedule: every 1 hours
+
+- description: monday morning mailout
+  url: /mail/weekly
+  schedule: every wednesday 09:00
+  timezone: UTC
