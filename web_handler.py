@@ -101,6 +101,27 @@ class GuildMainHandler(BaseHandler):
         template_vars["guild"] = guild
         self.render( "guild.html", template_vars )
 
+class GuildFeedHandler(BaseHandler):
+
+    def get(self, continent, realm, urltoken):
+
+        guild = Guild.lookup_cached( continent, realm, urltoken )
+        if not guild:
+            return self.error(404)
+        
+        achievement_data = guild.unified_achievement_list()
+        
+        template_vars = self.paginate( achievement_data )
+
+        if self.request:
+            template_vars['root'] = "http://%s"%( self.request.host )
+        else:
+            template_vars['root'] = "http://dummy"
+
+        template_vars["guild"] = guild
+        self.response.headers["Content-Type"] = "application/xml; charset=utf-8"
+        self.render( "feed.xml", template_vars )
+
 class GuildMembersHandler(BaseHandler):
 
     def get(self, continent, realm, urltoken):

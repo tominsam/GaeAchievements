@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xml:base="http://achievements.movieos.org/" xml:lang="en-US" xmlns="http://www.w3.org/2005/Atom">
+  <title type="text">Achievements for {{ guild.name }}</title>
+  <id>tag:achievements.heroku.com,{{ guild.created.strftime("%Y-%m-%d") }}:{{ guild.url() }}</id>
+  <generator uri="http://github.com/tominsam/gaeachievements/" version="0.1">GaeAchievements</generator>
+  <link href="{{ root }}{{ guild.url() }}feed/" rel="self" type="application/atom+xml"/>
+  <updated>{{ achievement_data[0].date.strftime("%Y-%m-%dT00:00:00Z") }}</updated>
+
+#   for record in achievement_data
+
+  <entry>
+    <id>tag:achievements.heroku.com,{{ record.date.strftime("%Y-%m-%d") }}:{{ record.achievement.url(guild) }}</id>
+    <title>{{ record.character_name }} achieved {{ record.achievement.name }}</title>
+    <published>{{ record.date.strftime("%Y-%m-%dT00:00:00Z") }}</published>
+    <updated>{{ record.date.strftime("%Y-%m-%dT00:00:00Z") }}</updated>
+    <author><name>{{ record.character_name }}</name></author>
+    <link href="{{ record.achievement.url(guild) }}" rel="alternate"/>
+    <content type="html">
+#     include "_achievement.html"
+    </content>
+  </entry>
+
+#   endfor
+
+</feed>
