@@ -10,7 +10,7 @@ def main():
         ('/', RootHandler),
         (r'/(\w{2})/(.*?)/guild/(.*?)/achievement/(.*?)/', GuildAchievementHandler),
         (r'/(\w{2})/(.*?)/guild/(.*?)/members/', GuildMembersHandler),
-        (r'/(\w{2})/(.*?)/guild/(.*?)/feed/?', GuildFeedHandler),
+        (r'/(\w{2})/(.*?)/guild/(.*?)/feed/', GuildFeedHandler),
         (r'/(\w{2})/(.*?)/guild/(.*?)/', GuildMainHandler),
         (r'/(\w{2})/(.*?)/character/(.*?)/', CharacterHandler),
         ('/fetcher/guild/', GuildFetcher),

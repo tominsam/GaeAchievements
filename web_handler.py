@@ -172,6 +172,9 @@ class CharacterHandler(BaseHandler):
 class NotFound(BaseHandler):
 
     def get(self):
+        if self.request.path[-1] != "/":
+            return self.redirect( self.request.path + "/" )
+
         self.error(404)
         self.render("404.html", {})
 
